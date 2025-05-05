@@ -9,10 +9,28 @@ type Props = {
 };
 
 const YamlEditor = ({ value, onChange }: Props) => {
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<unknown>(null);
 
-  const handleEditorDidMount: OnMount = (editor, monaco) => {
+  const handleEditorDidMount: OnMount = (editor) => {
     editorRef.current = editor;
+
+    // Listen for paste events
+    editor.onDidPaste((event) => {
+      const pastedText = editor.getModel()?.getValueInRange(event.range);
+      const cleanedText = pastedText
+      ?.split('\n * ')
+      .join('\n')
+      .split('/**')
+      .join('')
+      .split('*/')
+      .join('')
+      .split('@swagger')
+      .join('')
+      .trim() ?? '';
+
+      editor.setValue(cleanedText);
+      onChange(cleanedText);
+    });
   };
 
   return (
